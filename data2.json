@@ -1,0 +1,82 @@
+{
+  "store": {
+    "name": "The Book Nook",
+    "address": {
+      "street": "123 Main Street",
+      "city": "Booktown",
+      "state": "CA",
+      "zip": "90210"
+    },
+    "contact": {
+      "phone": "555-123-4567",
+      "email": "info@booknook.com"
+    },
+    "hours": [
+      { "day": "Monday", "open": "9am", "close": "6pm" },
+      { "day": "Tuesday", "open": "9am", "close": "6pm" },
+      { "day": "Wednesday", "open": "9am", "close": "6pm" },
+      { "day": "Thursday", "open": "9am", "close": "6pm" },
+      { "day": "Friday", "open": "9am", "close": "8pm" },
+      { "day": "Saturday", "open": "10am", "close": "5pm" },
+      { "day": "Sunday", "status": "Closed" }
+    ]
+  },
+  "categories": [
+    {
+      "id": 1,
+      "name": "Fiction",
+      "books": [
+        {
+          "id": "F101",
+          "title": "The Great Adventure",
+          "author": "John Doe",
+          "price": 15.99,
+          "availability": "In Stock",
+          "reviews": [
+            {
+              "id": 201,
+              "rating": 4.5,
+              "text": "A thrilling read!",
+              "reviewedBy": "Alice"
+            },
+            {
+              "id": 202,
+              "rating": 4.0,
+              "text": "Well written, but a bit long.",
+              "reviewedBy": "Bob"
+            }
+          ]
+        },
+        {
+          "id": "F102",
+          "title": "Mystery of the Lost Key",
+          "author": "Jane Smith",
+          "price": 12.99,
+          "availability": "Out of Stock",
+          "reviews": []
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Non-fiction",
+      "books": [
+        {
+          "id": "NF101",
+          "title": "Understanding the Universe",
+          "author": "Albert Newton",
+          "price": 18.50,
+          "availability": "In Stock",
+          "reviews": [
+            {
+              "id": 301,
+              "rating": 5.0,
+              "text": "Very insightful!",
+              "reviewedBy": "Charlie"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

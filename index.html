@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>D3 Radial Cluster Diagram with Parent-Child Highlight</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .link {
+      fill: none;
+      stroke: #999;
+      stroke-opacity: 0.5;
+    }
+
+    .node circle {
+      transition: fill 0.2s;
+    }
+
+    .node.highlight circle {
+      stroke: red;
+      stroke-width: 3px;
+    }
+
+    .link.highlight {
+      stroke: red;
+      stroke-width: 2px;
+    }
+
+    .both circle {
+      fill: #ccc;
+    }
+
+    .color1 circle {
+      fill: #1f77b4;
+    }
+
+    .color2 circle {
+      fill: #ff7f0e;
+    }
+
+    text {
+      font: 10px sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <svg id="radial-svg" width="800" height="800"></svg>
+  <script>
+    function isObject(v) {
+      return v && typeof v === 'object' && !Array.isArray(v);
+    }
+
+    function getColor(v1, v2) {
+      if (v1 !== undefined && v2 !== undefined) return "both";
+      if (v1 !== undefined) return "color1";
+      return "color2";
+    }
+
+    function mergeNodes(value1, value2) {
+      if (Array.isArray(value1) && Array.isArray(value2)) {
+        return mergeNodes(value1[0], value2[0]);
+      } else if (Array.isArray(value1) && !Array.isArray(value2)) {
+        return {
+          name: "[...]",
+          color: "color1",
+          children: value1.length ? buildChildren(value1[0], undefined) : []
+        };
+      } else if (!Array.isArray(value1) && Array.isArray(value2)) {
+        return {
+          name: "[...]",
+          color: "color2",
+          children: value2.length ? buildChildren(undefined, value2[0]) : []
+        };
+      } else if (isObject(value1) && isObject(value2)) {
+        const keys = new Set([...Object.keys(value1), ...Object.keys(value2)]);
+        const mergedChildren = [];
+        keys.forEach(k => {
+          if (k in value1 && k in value2) {
+            mergedChildren.push(buildHierarchy(k, value1[k], value2[k]));
+          } else if (k in value1) {
+            mergedChildren.push(buildHierarchy(k, value1[k], undefined));
+          } else {
+            mergedChildren.push(buildHierarchy(k, undefined, value2[k]));
+          }
+        });
+        return { children: mergedChildren };
+      } else if (isObject(value1) && value2 === undefined) {
+        return { color: "color1", children: buildChildren(value1, undefined) };
+      } else if (value1 === undefined && isObject(value2)) {
+        return { color: "color2", children: buildChildren(undefined, value2) };
+      } else {
+        if (value1 !== undefined && value2 !== undefined) {
+          return { color: "both" };
+        } else if (value1 !== undefined) {
+          return { color: "color1" };
+        } else {
+          return { color: "color2" };
+        }
+      }
+    }
+
+    function buildHierarchy(key, value1, value2) {
+      const merged = mergeNodes(value1, value2);
+      const color = merged.color ? merged.color : getColor(value1, value2);
+      const node = { name: key, color };
+      if (merged.children) {
+        node.children = merged.children;
+      }
+      return node;
+    }
+
+    function buildChildren(obj1, obj2) {
+      if (Array.isArray(obj1) && Array.isArray(obj2)) {
+        return [mergeNodes(obj1[0], obj2[0])];
+      }
+      if (Array.isArray(obj1)) {
+        return [mergeNodes(obj1[0], undefined)];
+      }
+      if (Array.isArray(obj2)) {
+        return [mergeNodes(undefined, obj2[0])];
+      }
+      const keys = new Set([]);
+      if (obj1 && isObject(obj1)) Object.keys(obj1).forEach(k => keys.add(k));
+      if (obj2 && isObject(obj2)) Object.keys(obj2).forEach(k => keys.add(k));
+      const children = [];
+      keys.forEach(k => {
+        children.push(buildHierarchy(k, obj1 && obj1[k], obj2 && obj2[k]));
+      });
+      return children;
+    }
+
+    function buildMergedTree(obj1, obj2) {
+      return {
+        name: "root",
+        color: "both",
+        children: buildChildren(obj1, obj2)
+      };
+    }
+
+    async function loadAndRender() {
+      try {
+        const [response1, response2] = await Promise.all([
+          fetch('data1.json'),
+          fetch('data2.json')
+        ]);
+        const [json1, json2] = await Promise.all([
+          response1.json(),
+          response2.json()
+        ]);
+
+        const data = buildMergedTree(json1, json2);
+
+        const width = 800;
+        const height = 800;
+        const radius = Math.min(width, height) / 2;
+
+        const svg = d3.select("#radial-svg")
+          .attr("width", width)
+          .attr("height", height)
+          .append("g")
+          .attr("transform", `translate(${width / 2},${height / 2})`);
+
+        const cluster = d3.cluster().size([2 * Math.PI, radius - 100]);
+        const root = d3.hierarchy(data);
+        cluster(root);
+
+        const links = svg.selectAll("path.link")
+          .data(root.links())
+          .join("path")
+          .attr("class", "link")
+          .attr("d", d3.linkRadial()
+            .angle(d => d.x)
+            .radius(d => d.y)
+          );
+
+        const nodes = svg.selectAll("g.node")
+          .data(root.descendants())
+          .join("g")
+          .attr("class", d => "node " + d.data.color)
+          .attr("transform", d => `rotate(${(d.x * 180 / Math.PI) - 90}) translate(${d.y},0)`);
+
+        nodes.append("circle")
+          .attr("r", 5)
+          .on("mouseover", function (event, d) {
+            highlightNodeAndLinks(d);
+          })
+          .on("mouseout", function () {
+            resetHighlight();
+          });
+
+        nodes.append("text")
+          .attr("dy", "0.31em")
+          .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+          .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
+          .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
+          .text(d => d.data.name);
+
+        function highlightNodeAndLinks(node) {
+          const connectedNodes = new Set();
+          const connectedLinks = new Set();
+
+          // Add direct parent if exists
+          if (node.parent) {
+            connectedNodes.add(node.parent);
+            connectedLinks.add({ source: node.parent, target: node });
+          }
+
+          // Add direct children
+          node.children?.forEach(child => {
+            connectedNodes.add(child);
+            connectedLinks.add({ source: node, target: child });
+          });
+
+          nodes.classed("highlight", d => connectedNodes.has(d));
+          links.classed("highlight", link => connectedLinks.has(link));
+        }
+
+        function resetHighlight() {
+          nodes.classed("highlight", false);
+          links.classed("highlight", false);
+        }
+
+      } catch (error) {
+        console.error('Error loading or parsing JSON files:', error);
+      }
+    }
+
+    loadAndRender();
+  </script>
+</body>
+</html>

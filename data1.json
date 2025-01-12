@@ -1,0 +1,91 @@
+{
+  "store": {
+    "name": "The Book Nook",
+    "location": {
+      "street": "123 Main Street",
+      "city": "Booktown",
+      "state": "CA",
+      "postalCode": "90210"
+    },
+    "contactDetails": {
+      "phone": "555-123-4567",
+      "email": "info@booknook.com"
+    },
+    "operatingHours": {
+      "Monday": "9am - 6pm",
+      "Tuesday": "9am - 6pm",
+      "Wednesday": "9am - 6pm",
+      "Thursday": "9am - 6pm",
+      "Friday": "9am - 8pm",
+      "Saturday": "10am - 5pm",
+      "Sunday": "Closed"
+    }
+  },
+  "categories": [
+    {
+      "categoryId": 1,
+      "categoryName": "Fiction",
+      "books": [
+        {
+          "id": "F101",
+          "title": "The Great Adventure",
+          "author": {
+            "firstName": "John",
+            "lastName": "Doe"
+          },
+          "price": 15.99,
+          "stockStatus": "In Stock",
+          "reviews": [
+            {
+              "id": 201,
+              "rating": 4.5,
+              "comment": "A thrilling read!",
+              "reviewer": "Alice"
+            },
+            {
+              "id": 202,
+              "rating": 4.0,
+              "comment": "Well written, but a bit long.",
+              "reviewer": "Bob"
+            }
+          ]
+        },
+        {
+          "id": "F102",
+          "title": "Mystery of the Lost Key",
+          "author": {
+            "firstName": "Jane",
+            "lastName": "Smith"
+          },
+          "price": 12.99,
+          "stockStatus": "Out of Stock",
+          "reviews": []
+        }
+      ]
+    },
+    {
+      "categoryId": 2,
+      "categoryName": "Non-fiction",
+      "books": [
+        {
+          "id": "NF101",
+          "title": "Understanding the Universe",
+          "author": {
+            "firstName": "Albert",
+            "lastName": "Newton"
+          },
+          "price": 18.50,
+          "stockStatus": "In Stock",
+          "reviews": [
+            {
+              "id": 301,
+              "rating": 5.0,
+              "comment": "Very insightful!",
+              "reviewer": "Charlie"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

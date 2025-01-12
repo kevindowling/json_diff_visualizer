@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Draggable D3 Radial Cluster Diagram with Hover Highlight</title>
+  <title>Draggable D3 Radial Cluster Diagram with Hover Highlight (JSON/XML Comparison)</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     .link {
@@ -43,6 +43,7 @@
 <body>
   <svg id="radial-svg" width="800" height="800"></svg>
   <script>
+    // Utility functions for merging (unchanged from previous code)
     const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
     const getColor = (v1, v2) => (v1 !== undefined && v2 !== undefined) ? "both" : (v1 !== undefined ? "color1" : "color2");
 
@@ -127,6 +128,36 @@
       };
     }
 
+    // Convert XML DOM to a JavaScript object for comparison
+    function xmlToJson(xmlNode) {
+      if (xmlNode.nodeType === Node.TEXT_NODE) {
+        const trimmed = xmlNode.textContent.trim();
+        return trimmed ? trimmed : null;
+      }
+      const obj = {};
+      if (xmlNode.attributes && xmlNode.attributes.length > 0) {
+        for (let attr of xmlNode.attributes) {
+          obj[`@${attr.name}`] = attr.value;
+        }
+      }
+      if (xmlNode.hasChildNodes()) {
+        for (let child of xmlNode.childNodes) {
+          const childJson = xmlToJson(child);
+          if (childJson === null) continue;
+          const childName = child.nodeName;
+          if (obj[childName]) {
+            if (!Array.isArray(obj[childName])) {
+              obj[childName] = [obj[childName]];
+            }
+            obj[childName].push(childJson);
+          } else {
+            obj[childName] = childJson;
+          }
+        }
+      }
+      return obj;
+    }
+
     function polarToCartesian(angle, radius) {
       return {
         x: radius * Math.cos(angle - Math.PI/2),
@@ -134,11 +165,34 @@
       };
     }
 
+    // Utility function to fetch and parse a file as JSON or XML
+    async function fetchAndParseFile(url) {
+      const response = await fetch(url);
+      const text = await response.text();
+      try {
+        // Try parsing as JSON
+        return JSON.parse(text);
+      } catch (jsonError) {
+        // If JSON parsing fails, try XML parsing
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "application/xml");
+        if (xmlDoc.documentElement.nodeName === "parsererror") {
+          throw new Error(`Error parsing XML from ${url}`);
+        }
+        return xmlToJson(xmlDoc.documentElement);
+      }
+    }
+
     async function loadAndRender() {
       try {
-        const [response1, response2] = await Promise.all([fetch('example_data/data1.json'), fetch('example_data/data2.json')]);
-        const [json1, json2] = await Promise.all([response1.json(), response2.json()]);
-        const data = buildMergedTree(json1, json2);
+        // Use fetchAndParseFile for each data source
+        const [obj1, obj2] = await Promise.all([
+          fetchAndParseFile('example_data/data1.xml'),  // Use correct file extension or path without extension if needed
+          fetchAndParseFile('example_data/data2.json')
+        ]);
+
+        const data = buildMergedTree(obj1, obj2);
+
         const width = 800, height = 800;
         const radius = Math.min(width, height) / 2;
         const svg = d3.select("#radial-svg")
@@ -146,14 +200,18 @@
           .attr("height", height)
           .append("g")
           .attr("transform", `translate(${width/2},${height/2})`);
+
         const cluster = d3.cluster().size([2 * Math.PI, radius - 100]);
         const root = d3.hierarchy(data);
         cluster(root);
+
         root.descendants().forEach(d => {
           const { x, y } = d;
           const { x: absX, y: absY } = polarToCartesian(x, y);
-          d.absX = absX; d.absY = absY;
+          d.absX = absX; 
+          d.absY = absY;
         });
+
         const linksData = root.links().map(link => ({
           source: link.source,
           target: link.target,
@@ -162,6 +220,7 @@
           target_x: link.target.absX,
           target_y: link.target.absY
         }));
+
         const links = svg.selectAll("line.link")
           .data(linksData)
           .join("line")
@@ -170,6 +229,7 @@
           .attr("y1", d => d.source_y)
           .attr("x2", d => d.target_x)
           .attr("y2", d => d.target_y);
+
         const drag = d3.drag()
           .on("start", function(event, d) {
             d3.select(this).classed("active", true).raise();
@@ -208,37 +268,44 @@
           .on("end", function(event, d) {
             d3.select(this).classed("active", false);
           });
+
         const nodes = svg.selectAll("g.node")
           .data(root.descendants())
           .join("g")
           .attr("class", d => `node ${d.data.color}`)
           .attr("transform", d => `translate(${d.absX},${d.absY})`)
           .call(drag);
+
         nodes.append("circle").attr("r", 5);
         nodes.append("text")
           .attr("dy", d => (d.x < Math.PI) ? "-1.2em" : "1.2em")
           .attr("text-anchor", "middle")
           .text(d => d.data.name);
+
         function highlightNodeAndLinks(node) {
-            const children = node.children || [];
-            nodes.classed("hover", d => d === node || d === node.parent || children.includes(d));
-            links.classed("hover", d => 
-                (d.source === node && d.target === node.parent) ||
-                (d.target === node && d.source === node.parent) ||
-                (d.source === node && children.includes(d.target)) ||
-                (d.target === node && children.includes(d.source))
-            );
+          const children = node.children || [];
+          nodes.classed("hover", d => d === node || d === node.parent || children.includes(d));
+          links.classed("hover", d => 
+            (d.source === node && d.target === node.parent) ||
+            (d.target === node && d.source === node.parent) ||
+            (d.source === node && children.includes(d.target)) ||
+            (d.target === node && children.includes(d.source))
+          );
         }
+
         function resetHighlight() {
           nodes.classed("hover", false);
           links.classed("hover", false);
         }
+
         nodes.on("mouseover", (event, d) => highlightNodeAndLinks(d))
              .on("mouseout", resetHighlight);
+
       } catch (error) {
         console.error('Error in loadAndRender:', error);
       }
     }
+
     loadAndRender();
   </script>
 </body>

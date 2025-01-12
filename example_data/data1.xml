@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <root>
+     <store>
+         <name>The Book Nook</name>
+         <location>
+             <street>123 Main Street</street>
+             <city>Booktown</city>
+             <state>CA</state>
+             <postalCode>90210</postalCode>
+         </location>
+         <contactDetails>
+             <phone>555-123-4567</phone>
+             <email>info@booknook.com</email>
+         </contactDetails>
+         <operatingHours>
+             <Monday>9am - 6pm</Monday>
+             <Tuesday>9am - 6pm</Tuesday>
+             <Wednesday>9am - 6pm</Wednesday>
+             <Thursday>9am - 6pm</Thursday>
+             <Friday>9am - 8pm</Friday>
+             <Saturday>10am - 5pm</Saturday>
+             <Sunday>Closed</Sunday>
+         </operatingHours>
+     </store>
+     <categories>
+         <categoryId>1</categoryId>
+         <categoryName>Fiction</categoryName>
+         <books>
+             <id>F101</id>
+             <title>The Great Adventure</title>
+             <author>
+                 <firstName>John</firstName>
+                 <lastName>Doe</lastName>
+             </author>
+             <price>15.99</price>
+             <stockStatus>In Stock</stockStatus>
+             <reviews>
+                 <id>201</id>
+                 <rating>4.5</rating>
+                 <comment>A thrilling read!</comment>
+                 <reviewer>Alice</reviewer>
+             </reviews>
+             <reviews>
+                 <id>202</id>
+                 <rating>4</rating>
+                 <comment>Well written, but a bit long.</comment>
+                 <reviewer>Bob</reviewer>
+             </reviews>
+         </books>
+         <books>
+             <id>F102</id>
+             <title>Mystery of the Lost Key</title>
+             <author>
+                 <firstName>Jane</firstName>
+                 <lastName>Smith</lastName>
+             </author>
+             <price>12.99</price>
+             <stockStatus>Out of Stock</stockStatus>
+         </books>
+     </categories>
+     <categories>
+         <categoryId>2</categoryId>
+         <categoryName>Non-fiction</categoryName>
+         <books>
+             <id>NF101</id>
+             <title>Understanding the Universe</title>
+             <author>
+                 <firstName>Albert</firstName>
+                 <lastName>Newton</lastName>
+             </author>
+             <price>18.5</price>
+             <stockStatus>In Stock</stockStatus>
+             <reviews>
+                 <id>301</id>
+                 <rating>5</rating>
+                 <comment>Very insightful!</comment>
+                 <reviewer>Charlie</reviewer>
+             </reviews>
+         </books>
+     </categories>
+ </root>

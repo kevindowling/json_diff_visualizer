@@ -139,8 +139,8 @@
     async function loadAndRender() {
       try {
         const [response1, response2] = await Promise.all([
-          fetch('data1.json'),
-          fetch('data2.json')
+          fetch('example_data/data1.json'),
+          fetch('example_data/data2.json')
         ]);
         const [json1, json2] = await Promise.all([
           response1.json(),
